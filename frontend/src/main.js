@@ -1,16 +1,17 @@
 import './style.css';
 
-// Импорт Wails runtime
+// Import Wails runtime
 import { GetCurrentDirectory, CheckProxiFyreExists, GetConfig, SaveConfig, RunProxiFyre, StopProxiFyre, DownloadProxiFyre, InstallService, UninstallService, StartService, StopService, GetServiceStatus, GetTimestamp } from '../wailsjs/go/main/App';
 
-// Глобальные переменные
+// Global variables
 let currentConfig = null;
 let currentApps = [];
-let isInitialized = false; // Флаг для предотвращения повторной инициализации
+let isInitialized = false; // Flag to prevent re-initialization
+let selectedProxyIndex = 0;
 
-// Вспомогательная функция для обработки ошибок
+// Helper function for error handling
 function getErrorMessage(error) {
-    let errorMessage = 'Неизвестная ошибка';
+    let errorMessage = 'Unknown error';
     if (error && typeof error === 'object') {
         if (error.message) {
             errorMessage = error.message;
@@ -25,44 +26,44 @@ function getErrorMessage(error) {
     return errorMessage;
 }
 
-// Инициализация приложения
+// Application initialization
 document.addEventListener('DOMContentLoaded', function() {
     initializeApp();
     setupEventListeners();
 });
 
-// Инициализация приложения
+// Initialize application
 async function initializeApp() {
     if (isInitialized) {
-        return; // Предотвращаем повторную инициализацию
+        return; // Prevent re-initialization
     }
     
     try {
-        logToConsole('🚀 ProxiFyre Configuration Editor запущен');
+        logToConsole('🚀 ProxiFyre Configuration Editor started');
         
-        // Проверяем текущую директорию
+        // Check current directory
         const currentDir = await GetCurrentDirectory();
-        console.log('Текущая директория:', currentDir);
+        console.log('Current directory:', currentDir);
         
-        // Загружаем конфигурацию
+        // Load configuration
         await loadCurrentConfig();
         
-        // Проверяем статус ProxiFyre
+        // Check ProxiFyre status
         await checkProxiFyreStatus();
         
         isInitialized = true;
         
     } catch (error) {
-        console.error('Ошибка инициализации:', error);
-        logToConsole(`❌ Ошибка инициализации: ${error.message}`);
+        console.error('Initialization error:', error);
+        logToConsole(`❌ Initialization error: ${error.message}`);
     }
 }
 
-// Настройка обработчиков событий
+// Setup event handlers
 function setupEventListeners() {
-    console.log('Настройка обработчиков событий...');
+    console.log('Setting up event handlers...');
     
-    // Переключение вкладок
+    // Tab switching
     document.querySelectorAll('.tab-button').forEach(button => {
         button.addEventListener('click', function() {
             const tabName = this.getAttribute('data-tab');
@@ -70,79 +71,79 @@ function setupEventListeners() {
         });
     });
 
-    // Кнопки управления
+    // Control buttons
     const saveBtn = document.getElementById('saveBtn');
     const refreshBtn = document.getElementById('refreshBtn');
     
     if (saveBtn) {
         saveBtn.addEventListener('click', saveConfiguration);
-        console.log('✅ Обработчик для кнопки "Сохранить" добавлен');
+        console.log('✅ Event handler for "Save" button added');
     } else {
-        console.error('❌ Кнопка "Сохранить" не найдена');
+        console.error('❌ "Save" button not found');
     }
     
     if (refreshBtn) {
         refreshBtn.addEventListener('click', loadCurrentConfig);
-        console.log('✅ Обработчик для кнопки "Обновить" добавлен');
+        console.log('✅ Event handler for "Refresh" button added');
     } else {
-        console.error('❌ Кнопка "Обновить" не найдена');
+        console.error('❌ "Refresh" button not found');
     }
 
-    // Кнопки управления приложением
+    // Application control buttons
     const runBtn = document.getElementById('runBtn');
     const stopBtn = document.getElementById('stopBtn');
     const downloadBtn = document.getElementById('downloadBtn');
     
     if (runBtn) {
         runBtn.addEventListener('click', runProxiFyre);
-        console.log('✅ Обработчик для кнопки "Запустить" добавлен');
+        console.log('✅ Event handler for "Run" button added');
     } else {
-        console.error('❌ Кнопка "Запустить" не найдена');
+        console.error('❌ "Run" button not found');
     }
     
     if (stopBtn) {
         stopBtn.addEventListener('click', stopProxiFyre);
-        console.log('✅ Обработчик для кнопки "Остановить" добавлен');
+        console.log('✅ Event handler for "Stop" button added');
     } else {
-        console.error('❌ Кнопка "Остановить" не найдена');
+        console.error('❌ "Stop" button not found');
     }
     
     if (downloadBtn) {
         downloadBtn.addEventListener('click', downloadProxiFyre);
-        console.log('✅ Обработчик для кнопки "Скачать" добавлен');
+        console.log('✅ Event handler for "Download" button added');
     } else {
-        console.error('❌ Кнопка "Скачать" не найдена');
+        console.error('❌ "Download" button not found');
     }
 
-    // Кнопки управления приложениями
+    // Application management buttons
     const addAppBtn = document.getElementById('addAppBtn');
     
     if (addAppBtn) {
         addAppBtn.addEventListener('click', addApplication);
-        console.log('✅ Обработчик для кнопки "Добавить" добавлен');
+        console.log('✅ Event handler for "Add" button added');
     } else {
-        console.error('❌ Кнопка "Добавить" не найдена');
+        console.error('❌ "Add" button not found');
     }
 
-    // Кнопки управления консолью
+    // Console management buttons
     const clearConsoleBtn = document.getElementById('clearConsoleBtn');
     const copyConsoleBtn = document.getElementById('copyConsoleBtn');
     
     if (clearConsoleBtn) {
         clearConsoleBtn.addEventListener('click', clearConsole);
-        console.log('✅ Обработчик для кнопки "Очистить" добавлен');
+        console.log('✅ Event handler for "Clear" button added');
     } else {
-        console.error('❌ Кнопка "Очистить" не найдена');
+        console.error('❌ "Clear" button not found');
     }
     
     if (copyConsoleBtn) {
         copyConsoleBtn.addEventListener('click', copyConsoleOutput);
-        console.log('✅ Обработчик для кнопки "Копировать" добавлен');
+        console.log('✅ Event handler for "Copy" button added');
     } else {
-        console.error('❌ Кнопка "Копировать" не найдена');
+        console.error('❌ "Copy" button not found');
     }
 
-    // Кнопки управления сервисом
+    // Service management buttons
     const installServiceBtn = document.getElementById('installServiceBtn');
     const uninstallServiceBtn = document.getElementById('uninstallServiceBtn');
     const startServiceBtn = document.getElementById('startServiceBtn');
@@ -151,40 +152,40 @@ function setupEventListeners() {
     
     if (installServiceBtn) {
         installServiceBtn.addEventListener('click', installService);
-        console.log('✅ Обработчик для кнопки "Установить сервис" добавлен');
+        console.log('✅ Event handler for "Install Service" button added');
     } else {
-        console.error('❌ Кнопка "Установить сервис" не найдена');
+        console.error('❌ "Install Service" button not found');
     }
     
     if (uninstallServiceBtn) {
         uninstallServiceBtn.addEventListener('click', uninstallService);
-        console.log('✅ Обработчик для кнопки "Удалить сервис" добавлен');
+        console.log('✅ Event handler for "Uninstall Service" button added');
     } else {
-        console.error('❌ Кнопка "Удалить сервис" не найдена');
+        console.error('❌ "Uninstall Service" button not found');
     }
     
     if (startServiceBtn) {
         startServiceBtn.addEventListener('click', startService);
-        console.log('✅ Обработчик для кнопки "Запустить сервис" добавлен');
+        console.log('✅ Event handler for "Start Service" button added');
     } else {
-        console.error('❌ Кнопка "Запустить сервис" не найдена');
+        console.error('❌ "Start Service" button not found');
     }
     
     if (stopServiceBtn) {
         stopServiceBtn.addEventListener('click', stopService);
-        console.log('✅ Обработчик для кнопки "Остановить сервис" добавлен');
+        console.log('✅ Event handler for "Stop Service" button added');
     } else {
-        console.error('❌ Кнопка "Остановить сервис" не найдена');
+        console.error('❌ "Stop Service" button not found');
     }
     
     if (refreshStatusBtn) {
         refreshStatusBtn.addEventListener('click', updateServiceStatus);
-        console.log('✅ Обработчик для кнопки "Обновить статус" добавлен');
+        console.log('✅ Event handler for "Refresh Status" button added');
     } else {
-        console.error('❌ Кнопка "Обновить статус" не найдена');
+        console.error('❌ "Refresh Status" button not found');
     }
 
-    // Обработчики изменения полей
+    // Field change handlers
     const endpoint = document.getElementById('endpoint');
     const username = document.getElementById('username');
     const password = document.getElementById('password');
@@ -192,86 +193,96 @@ function setupEventListeners() {
     
     if (endpoint) {
         endpoint.addEventListener('input', updateConfigFromUI);
-        console.log('✅ Обработчик для поля "endpoint" добавлен');
+        console.log('✅ Event handler for "endpoint" field added');
     }
     
     if (username) {
         username.addEventListener('input', updateConfigFromUI);
-        console.log('✅ Обработчик для поля "username" добавлен');
+        console.log('✅ Event handler for "username" field added');
     }
     
     if (password) {
         password.addEventListener('input', updateConfigFromUI);
-        console.log('✅ Обработчик для поля "password" добавлен');
+        console.log('✅ Event handler for "password" field added');
     }
     
     if (logLevel) {
         logLevel.addEventListener('change', updateConfigFromUI);
-        console.log('✅ Обработчик для поля "logLevel" добавлен');
+        console.log('✅ Event handler for "logLevel" field added');
     }
     
-    console.log('Настройка обработчиков событий завершена');
+    console.log('Event handlers setup completed');
 }
 
-// Переключение вкладок
+// Switch tabs
 function switchTab(tabName) {
-    // Убираем активный класс со всех вкладок
+    // Remove active class from all tabs
     document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
     document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
 
-    // Активируем выбранную вкладку
+    // Activate selected tab
     document.querySelector(`[data-tab="${tabName}"]`).classList.add('active');
     document.getElementById(`${tabName}-tab`).classList.add('active');
 }
 
-// Загрузка текущей конфигурации
+// Load current configuration
 async function loadCurrentConfig() {
     try {
         const configData = await GetConfig();
         currentConfig = JSON.parse(configData);
         
-        // Обновляем UI
+        // Update UI
         updateUIFromConfig();
         
-        // Выводим сообщение только если это не инициализация
+        // Log message only if not initialization
         if (isInitialized) {
-            logToConsole('✅ Конфигурация загружена');
+            logToConsole('✅ Configuration loaded');
         }
     } catch (error) {
-        console.error('Ошибка загрузки конфигурации:', error);
-        logToConsole(`❌ Ошибка загрузки конфигурации: ${error.message}`);
+        console.error('Error loading configuration:', error);
+        logToConsole(`❌ Error loading configuration: ${error.message}`);
     }
 }
 
-// Обновление UI из конфигурации
+// Update UI from configuration
 function updateUIFromConfig() {
     if (!currentConfig || !currentConfig.proxies || currentConfig.proxies.length === 0) {
         return;
     }
 
-    const proxy = currentConfig.proxies[0];
-    
-    // Обновляем поля прокси
+    // Populate proxy dropdown
+    const proxySelect = document.getElementById('proxySelect');
+    proxySelect.innerHTML = '';
+    currentConfig.proxies.forEach((proxy, index) => {
+        const option = document.createElement('option');
+        option.value = index;
+        option.textContent = `Proxy ${index + 1}${proxy.socks5ProxyEndpoint ? ' - ' + proxy.socks5ProxyEndpoint : ''}`;
+        proxySelect.appendChild(option);
+    });
+
+    // Ensure selected index is valid
+    if (selectedProxyIndex >= currentConfig.proxies.length) {
+        selectedProxyIndex = 0;
+    }
+    proxySelect.value = selectedProxyIndex;
+
+    // Display the selected proxy
+    const proxy = currentConfig.proxies[selectedProxyIndex];
     document.getElementById('endpoint').value = proxy.socks5ProxyEndpoint || '';
     document.getElementById('username').value = proxy.username || '';
     document.getElementById('password').value = proxy.password || '';
-    
-    // Обновляем уровень логирования
+
+    // Update log level (still global)
     const logLevelSelect = document.getElementById('logLevel');
     const logLevel = currentConfig.logLevel || 'Error';
-    for (let i = 0; i < logLevelSelect.options.length; i++) {
-        if (logLevelSelect.options[i].value === logLevel) {
-            logLevelSelect.selectedIndex = i;
-            break;
-        }
-    }
-    
-    // Обновляем список приложений
+    logLevelSelect.value = logLevel;
+
+    // Update applications list (shared across proxies? The backend stores per-proxy appNames)
     currentApps = proxy.appNames || [];
     updateAppsDisplay();
 }
 
-// Обновление конфигурации из UI
+// Update configuration from UI
 function updateConfigFromUI() {
     if (!currentConfig) {
         currentConfig = {
@@ -286,25 +297,28 @@ function updateConfigFromUI() {
         };
     }
 
-    // Обновляем настройки прокси
+    // Update global log level
     currentConfig.logLevel = document.getElementById('logLevel').value;
-    
-    if (!currentConfig.proxies) {
+
+    // Ensure at least one proxy exists
+    if (!currentConfig.proxies || currentConfig.proxies.length === 0) {
         currentConfig.proxies = [{}];
+        selectedProxyIndex = 0;
     }
-    
-    const proxy = currentConfig.proxies[0];
+
+    // Update the selected proxy
+    const proxy = currentConfig.proxies[selectedProxyIndex];
     proxy.socks5ProxyEndpoint = document.getElementById('endpoint').value;
     proxy.username = document.getElementById('username').value;
     proxy.password = document.getElementById('password').value;
-    proxy.appNames = currentApps;
-    
+    proxy.appNames = currentApps; // currentApps should reflect this proxy's apps
+
     if (!proxy.supportedProtocols) {
         proxy.supportedProtocols = ["TCP", "UDP"];
     }
 }
 
-// Сохранение конфигурации
+// Save configuration
 async function saveConfiguration() {
     try {
         updateConfigFromUI();
@@ -312,20 +326,20 @@ async function saveConfiguration() {
         const configData = JSON.stringify(currentConfig);
         await SaveConfig(configData);
         
-        logToConsole('💾 Конфигурация сохранена');
-        showNotification('Конфигурация успешно сохранена!', 'success');
+        logToConsole('💾 Configuration saved');
+        showNotification('Configuration saved successfully!', 'success');
     } catch (error) {
-        console.error('Ошибка сохранения:', error);
+        console.error('Save error:', error);
         
-        // Улучшенная обработка ошибок
+        // Improved error handling
         const errorMessage = getErrorMessage(error);
-        console.log('📝 Обработанная ошибка:', errorMessage);
-        logToConsole(`❌ Ошибка сохранения: ${errorMessage}`);
-        showNotification(`Ошибка сохранения: ${errorMessage}`, 'error');
+        console.log('📝 Processed error:', errorMessage);
+        logToConsole(`❌ Save error: ${errorMessage}`);
+        showNotification(`Save error: ${errorMessage}`, 'error');
     }
 }
 
-// Обновление отображения приложений
+// Update applications display
 function updateAppsDisplay() {
     const appsList = document.getElementById('appsList');
     appsList.innerHTML = '';
@@ -334,24 +348,24 @@ function updateAppsDisplay() {
         const appItem = document.createElement('div');
         appItem.className = 'app-item';
         
-        // Создаем span с именем приложения
+        // Create span with app name
         const appSpan = document.createElement('span');
         appSpan.textContent = `• ${app}`;
         
-        // Создаем кнопку удаления
+        // Create delete button
         const removeBtn = document.createElement('button');
         removeBtn.className = 'btn btn-danger btn-sm';
         removeBtn.textContent = '✕';
         removeBtn.setAttribute('data-index', index);
         
-        // Добавляем обработчик события для кнопки удаления
+        // Add click handler for delete button
         removeBtn.addEventListener('click', function() {
             const buttonIndex = parseInt(this.getAttribute('data-index'));
-            console.log('🔄 Клик по кнопке удаления, индекс:', buttonIndex);
+            console.log('🔄 Click on delete button, index:', buttonIndex);
             removeAppByIndex(buttonIndex);
         });
         
-        // Добавляем элементы в appItem
+        // Add elements to appItem
         appItem.appendChild(appSpan);
         appItem.appendChild(removeBtn);
         
@@ -359,45 +373,45 @@ function updateAppsDisplay() {
     });
 }
 
-// Добавление приложения
+// Add application
 async function addApplication() {
-    console.log('🔄 Функция addApplication вызвана');
+    console.log('🔄 Function addApplication called');
     try {
-        // Создаем скрытый input для выбора файла
+        // Create hidden file input
         const fileInput = document.createElement('input');
         fileInput.type = 'file';
-        fileInput.accept = '.exe,.msi,.bat,.cmd,.com'; // Принимаем исполняемые файлы
+        fileInput.accept = '.exe,.msi,.bat,.cmd,.com'; // Accept executable files
         fileInput.style.display = 'none';
         
-        // Добавляем обработчик события выбора файла
+        // Add file selection handler
         fileInput.onchange = function(event) {
             const file = event.target.files[0];
             if (file) {
                 const fileName = file.name;
-                console.log('📁 Выбран файл:', fileName);
+                console.log('📁 File selected:', fileName);
                 
                 if (!currentApps.includes(fileName)) {
                     currentApps.push(fileName);
-                    console.log('✅ Приложение добавлено в массив:', fileName);
+                    console.log('✅ Application added to array:', fileName);
                     updateAppsDisplay();
                     updateConfigFromUI();
-                    logToConsole(`✅ Приложение '${fileName}' добавлено`);
-                    showNotification(`Приложение '${fileName}' добавлено!`, 'success');
+                    logToConsole(`✅ Application '${fileName}' added`);
+                    showNotification(`Application '${fileName}' added!`, 'success');
                 } else {
-                    console.log('⚠️ Приложение уже существует в списке');
-                    showNotification('Это приложение уже добавлено в список!', 'warning');
+                    console.log('⚠️ Application already exists in list');
+                    showNotification('This application is already in the list!', 'warning');
                 }
             }
             
-            // Очищаем input для возможности повторного выбора того же файла
+            // Clear input to allow re-selecting the same file
             fileInput.value = '';
         };
         
-        // Добавляем input в DOM и вызываем диалог выбора файла
+        // Add input to DOM and trigger file dialog
         document.body.appendChild(fileInput);
         fileInput.click();
         
-        // Удаляем input из DOM после использования
+        // Remove input from DOM after use
         setTimeout(() => {
             if (fileInput.parentNode) {
                 fileInput.parentNode.removeChild(fileInput);
@@ -405,221 +419,219 @@ async function addApplication() {
         }, 1000);
         
     } catch (error) {
-        console.error('❌ Ошибка в addApplication:', error);
-        logToConsole(`❌ Ошибка добавления приложения: ${error.message}`);
+        console.error('❌ Error in addApplication:', error);
+        logToConsole(`❌ Error adding application: ${error.message}`);
     }
 }
 
-
-
-// Удаление приложения по индексу
+// Remove application by index
 function removeAppByIndex(index) {
-    console.log('🔄 Функция removeAppByIndex вызвана с индексом:', index);
+    console.log('🔄 Function removeAppByIndex called with index:', index);
     
     if (index >= 0 && index < currentApps.length) {
         const appName = currentApps[index];
-        console.log('📝 Удаляю приложение:', appName);
+        console.log('📝 Removing application:', appName);
         
         currentApps.splice(index, 1);
         updateAppsDisplay();
         updateConfigFromUI();
         
-        logToConsole(`✅ Приложение '${appName}' удалено`);
-        showNotification(`Приложение '${appName}' удалено!`, 'success');
+        logToConsole(`✅ Application '${appName}' removed`);
+        showNotification(`Application '${appName}' removed!`, 'success');
         
-        console.log('✅ Приложение успешно удалено из массива');
+        console.log('✅ Application successfully removed from array');
     } else {
-        console.error('❌ Некорректный индекс для удаления:', index);
-        showNotification('Ошибка: некорректный индекс приложения!', 'error');
+        console.error('❌ Invalid index for removal:', index);
+        showNotification('Error: invalid application index!', 'error');
     }
 }
 
-// Запуск ProxiFyre
+// Run ProxiFyre
 async function runProxiFyre() {
-    console.log('🔄 Функция runProxiFyre вызвана');
+    console.log('🔄 Function runProxiFyre called');
     try {
-        logToConsole('🚀 Запуск ProxiFyre...');
-        console.log('📞 Вызываю RunProxiFyre() из Go backend...');
+        logToConsole('🚀 Starting ProxiFyre...');
+        console.log('📞 Calling RunProxiFyre() from Go backend...');
         
         await RunProxiFyre();
         
-        console.log('✅ RunProxiFyre() выполнен успешно');
-        logToConsole('✅ ProxiFyre запущен!');
-        showNotification('ProxiFyre успешно запущен!', 'success');
+        console.log('✅ RunProxiFyre() executed successfully');
+        logToConsole('✅ ProxiFyre started!');
+        showNotification('ProxiFyre started successfully!', 'success');
     } catch (error) {
-        console.error('❌ Ошибка в runProxiFyre:', error);
+        console.error('❌ Error in runProxiFyre:', error);
         
-        // Улучшенная обработка ошибок
+        // Improved error handling
         const errorMessage = getErrorMessage(error);
-        console.log('📝 Обработанная ошибка:', errorMessage);
-        logToConsole(`❌ Ошибка запуска: ${errorMessage}`);
-        showNotification(`Ошибка запуска: ${errorMessage}`, 'error');
+        console.log('📝 Processed error:', errorMessage);
+        logToConsole(`❌ Start error: ${errorMessage}`);
+        showNotification(`Start error: ${errorMessage}`, 'error');
     }
 }
 
-// Остановка ProxiFyre
+// Stop ProxiFyre
 async function stopProxiFyre() {
-    console.log('🔄 Функция stopProxiFyre вызвана');
+    console.log('🔄 Function stopProxiFyre called');
     try {
-        logToConsole('🛑 Остановка ProxiFyre...');
-        console.log('📞 Вызываю StopProxiFyre() из Go backend...');
+        logToConsole('🛑 Stopping ProxiFyre...');
+        console.log('📞 Calling StopProxiFyre() from Go backend...');
         
         await StopProxiFyre();
         
-        console.log('✅ StopProxiFyre() выполнен успешно');
-        logToConsole('✅ ProxiFyre остановлен!');
-        showNotification('ProxiFyre успешно остановлен!', 'success');
+        console.log('✅ StopProxiFyre() executed successfully');
+        logToConsole('✅ ProxiFyre stopped!');
+        showNotification('ProxiFyre stopped successfully!', 'success');
     } catch (error) {
-        console.error('❌ Ошибка в stopProxiFyre:', error);
+        console.error('❌ Error in stopProxiFyre:', error);
         
-        // Улучшенная обработка ошибок
+        // Improved error handling
         const errorMessage = getErrorMessage(error);
-        console.log('📝 Обработанная ошибка:', errorMessage);
-        logToConsole(`❌ Ошибка остановки: ${errorMessage}`);
-        showNotification(`Ошибка остановки: ${errorMessage}`, 'error');
+        console.log('📝 Processed error:', errorMessage);
+        logToConsole(`❌ Stop error: ${errorMessage}`);
+        showNotification(`Stop error: ${errorMessage}`, 'error');
     }
 }
 
-// Скачивание ProxiFyre
+// Download ProxiFyre
 async function downloadProxiFyre() {
-    console.log('🔄 Функция downloadProxiFyre вызвана');
+    console.log('🔄 Function downloadProxiFyre called');
     try {
-        logToConsole('⬇️ Начинаю загрузку ProxiFyre...');
-        console.log('📞 Вызываю DownloadProxiFyre() из Go backend...');
+        logToConsole('⬇️ Downloading ProxiFyre...');
+        console.log('📞 Calling DownloadProxiFyre() from Go backend...');
         
         await DownloadProxiFyre();
         
-        console.log('✅ DownloadProxiFyre() выполнен успешно');
-        logToConsole('✅ ProxiFyre загружен!');
-        showNotification('ProxiFyre успешно загружен!', 'success');
+        console.log('✅ DownloadProxiFyre() executed successfully');
+        logToConsole('✅ ProxiFyre downloaded!');
+        showNotification('ProxiFyre downloaded successfully!', 'success');
     } catch (error) {
-        console.error('❌ Ошибка в downloadProxiFyre:', error);
+        console.error('❌ Error in downloadProxiFyre:', error);
         
-        // Улучшенная обработка ошибок
+        // Improved error handling
         const errorMessage = getErrorMessage(error);
-        console.log('📝 Обработанная ошибка:', errorMessage);
-        logToConsole(`❌ Ошибка загрузки: ${errorMessage}`);
-        showNotification(`Ошибка загрузки: ${errorMessage}`, 'error');
+        console.log('📝 Processed error:', errorMessage);
+        logToConsole(`❌ Download error: ${errorMessage}`);
+        showNotification(`Download error: ${errorMessage}`, 'error');
     }
 }
 
-// Установка сервиса
+// Install service
 async function installService() {
     try {
-        logToConsole('📥 Установка сервиса ProxiFyre...');
+        logToConsole('📥 Installing ProxiFyre service...');
         
         await InstallService();
         
-        logToConsole('✅ Сервис ProxiFyre установлен!');
-        showNotification('Сервис ProxiFyre установлен!', 'success');
+        logToConsole('✅ ProxiFyre service installed!');
+        showNotification('ProxiFyre service installed!', 'success');
         await updateServiceStatus();
     } catch (error) {
-        console.error('Ошибка установки сервиса:', error);
-        logToConsole(`❌ Ошибка установки сервиса: ${error.message}`);
-        showNotification(`Ошибка установки сервиса: ${error.message}`, 'error');
+        console.error('Error installing service:', error);
+        logToConsole(`❌ Error installing service: ${error.message}`);
+        showNotification(`Error installing service: ${error.message}`, 'error');
     }
 }
 
-// Удаление сервиса
+// Uninstall service
 async function uninstallService() {
     try {
-        logToConsole('🗑️ Удаление сервиса ProxiFyre...');
+        logToConsole('🗑️ Uninstalling ProxiFyre service...');
         
         await UninstallService();
         
-        logToConsole('✅ Сервис ProxiFyre удален!');
-        showNotification('Сервис ProxiFyre удален!', 'success');
+        logToConsole('✅ ProxiFyre service uninstalled!');
+        showNotification('ProxiFyre service uninstalled!', 'success');
         await updateServiceStatus();
     } catch (error) {
-        console.error('Ошибка удаления сервиса:', error);
-        logToConsole(`❌ Ошибка удаления сервиса: ${error.message}`);
-        showNotification(`Ошибка удаления сервиса: ${error.message}`, 'error');
+        console.error('Error uninstalling service:', error);
+        logToConsole(`❌ Error uninstalling service: ${error.message}`);
+        showNotification(`Error uninstalling service: ${error.message}`, 'error');
     }
 }
 
-// Запуск сервиса
+// Start service
 async function startService() {
     try {
-        logToConsole('▶️ Запуск сервиса ProxiFyre...');
+        logToConsole('▶️ Starting ProxiFyre service...');
         
         await StartService();
         
-        logToConsole('✅ Сервис ProxiFyre запущен!');
-        showNotification('Сервис ProxiFyre запущен!', 'success');
+        logToConsole('✅ ProxiFyre service started!');
+        showNotification('ProxiFyre service started!', 'success');
         await updateServiceStatus();
     } catch (error) {
-        console.error('Ошибка запуска сервиса:', error);
-        logToConsole(`❌ Ошибка запуска сервиса: ${error.message}`);
-        showNotification(`Ошибка запуска сервиса: ${error.message}`, 'error');
+        console.error('Error starting service:', error);
+        logToConsole(`❌ Error starting service: ${error.message}`);
+        showNotification(`Error starting service: ${error.message}`, 'error');
     }
 }
 
-// Остановка сервиса
+// Stop service
 async function stopService() {
     try {
-        logToConsole('⏹️ Остановка сервиса ProxiFyre...');
+        logToConsole('⏹️ Stopping ProxiFyre service...');
         
         await StopService();
         
-        logToConsole('✅ Сервис ProxiFyre остановлен!');
-        showNotification('Сервис ProxiFyre остановлен!', 'success');
+        logToConsole('✅ ProxiFyre service stopped!');
+        showNotification('ProxiFyre service stopped!', 'success');
         await updateServiceStatus();
     } catch (error) {
-        console.error('Ошибка остановки сервиса:', error);
-        logToConsole(`❌ Ошибка остановки сервиса: ${error.message}`);
-        showNotification(`Ошибка остановки сервиса: ${error.message}`, 'error');
+        console.error('Error stopping service:', error);
+        logToConsole(`❌ Error stopping service: ${error.message}`);
+        showNotification(`Error stopping service: ${error.message}`, 'error');
     }
 }
 
-// Обновление статуса сервиса
+// Update service status
 async function updateServiceStatus() {
     try {
         const status = await GetServiceStatus();
         const statusElement = document.getElementById('serviceStatus');
         
-        statusElement.textContent = `Статус: ${status}`;
+        statusElement.textContent = `Status: ${status}`;
         
-        // Обновляем цвет в зависимости от статуса
+        // Update color based on status
         statusElement.className = '';
-        if (status.includes('Запущен')) {
+        if (status.includes('Running')) {
             statusElement.style.color = 'green';
             statusElement.style.fontWeight = 'bold';
-        } else if (status.includes('Остановлен')) {
+        } else if (status.includes('Stopped')) {
             statusElement.style.color = 'red';
             statusElement.style.fontWeight = 'bold';
-        } else if (status.includes('Неизвестно')) {
+        } else if (status.includes('Unknown')) {
             statusElement.style.color = 'orange';
             statusElement.style.fontWeight = 'bold';
         } else {
             statusElement.style.color = 'gray';
         }
         
-        logToConsole(`📊 Статус сервиса обновлен: ${status}`);
+        logToConsole(`📊 Service status updated: ${status}`);
     } catch (error) {
-        console.error('Ошибка обновления статуса сервиса:', error);
-        logToConsole(`❌ Ошибка обновления статуса сервиса: ${error.message}`);
+        console.error('Error updating service status:', error);
+        logToConsole(`❌ Error updating service status: ${error.message}`);
     }
 }
 
-// Проверка статуса ProxiFyre
+// Check ProxiFyre status
 async function checkProxiFyreStatus() {
     try {
         const exists = await CheckProxiFyreExists();
         if (exists) {
-            // Выводим сообщение только если это не инициализация
+            // Log message only if not initialization
             if (isInitialized) {
-                logToConsole('✅ ProxiFyre.exe найден в текущей директории');
+                logToConsole('✅ ProxiFyre.exe found in current directory');
             }
         } else {
-            logToConsole('⚠️ ProxiFyre.exe не найден в текущей директории');
+            logToConsole('⚠️ ProxiFyre.exe not found in current directory');
         }
     } catch (error) {
-        console.error('Ошибка проверки статуса ProxiFyre:', error);
-        logToConsole(`❌ Ошибка проверки статуса ProxiFyre: ${error.message}`);
+        console.error('Error checking ProxiFyre status:', error);
+        logToConsole(`❌ Error checking ProxiFyre status: ${error.message}`);
     }
 }
 
-// Логирование в консоль
+// Log to console
 function logToConsole(message) {
     const console = document.getElementById('console');
     const timestamp = new Date().toLocaleTimeString();
@@ -627,36 +639,36 @@ function logToConsole(message) {
     logEntry.innerHTML = `[${timestamp}] ${message}`;
     console.appendChild(logEntry);
     
-    // Прокручиваем к концу
+    // Scroll to end
     console.scrollTop = console.scrollHeight;
 }
 
-// Очистка консоли
+// Clear console
 function clearConsole() {
     document.getElementById('console').innerHTML = '';
-    logToConsole('🧹 Консоль очищена');
+    logToConsole('🧹 Console cleared');
 }
 
-// Копирование содержимого консоли
+// Copy console output
 function copyConsoleOutput() {
     const console = document.getElementById('console');
     const text = console.innerText;
     
     navigator.clipboard.writeText(text).then(() => {
-        showNotification('Содержимое консоли скопировано в буфер обмена!', 'success');
+        showNotification('Console content copied to clipboard!', 'success');
     }).catch(() => {
-        showNotification('Не удалось скопировать содержимое консоли', 'error');
+        showNotification('Failed to copy console content', 'error');
     });
 }
 
-// Показ уведомлений
+// Show notification
 function showNotification(message, type = 'info') {
-    // Создаем элемент уведомления
+    // Create notification element
     const notification = document.createElement('div');
     notification.className = `notification notification-${type}`;
     notification.textContent = message;
     
-    // Добавляем стили
+    // Add styles
     notification.style.cssText = `
         position: fixed;
         top: 20px;
@@ -670,7 +682,7 @@ function showNotification(message, type = 'info') {
         max-width: 300px;
     `;
     
-    // Цвета для разных типов
+    // Colors for different types
     switch (type) {
         case 'success':
             notification.style.backgroundColor = '#28a745';
@@ -686,10 +698,10 @@ function showNotification(message, type = 'info') {
             notification.style.backgroundColor = '#007bff';
     }
     
-    // Добавляем в DOM
+    // Add to DOM
     document.body.appendChild(notification);
     
-    // Удаляем через 3 секунды
+    // Remove after 3 seconds
     setTimeout(() => {
         notification.style.animation = 'slideOut 0.3s ease-out';
         setTimeout(() => {
@@ -700,7 +712,7 @@ function showNotification(message, type = 'info') {
     }, 3000);
 }
 
-// Добавляем CSS анимации для уведомлений
+// Add CSS animations for notifications
 const style = document.createElement('style');
 style.textContent = `
     @keyframes slideIn {
@@ -715,8 +727,43 @@ style.textContent = `
 `;
 document.head.appendChild(style);
 
-// Автообновление статуса сервиса каждые 10 секунд - УБИРАЕМ
+// Auto-update service status every 10 seconds - REMOVED
 // setInterval(updateServiceStatus, 10000);
 
-// Логируем запуск приложения
-//logToConsole('🚀 ProxiFyre Configuration Editor запущен');
+// Log application start
+//logToConsole('🚀 ProxiFyre Configuration Editor started');
+
+document.getElementById('proxySelect').addEventListener('change', function(e) {
+    selectedProxyIndex = parseInt(e.target.value);
+    updateUIFromConfig(); // refresh fields with new proxy data
+});
+function addProxy() {
+    if (!currentConfig) {
+        currentConfig = { logLevel: "Error", proxies: [] };
+    }
+    const newProxy = {
+        appNames: [],
+        socks5ProxyEndpoint: "",
+        username: "",
+        password: "",
+        supportedProtocols: ["TCP", "UDP"]
+    };
+    currentConfig.proxies.push(newProxy);
+    selectedProxyIndex = currentConfig.proxies.length - 1;
+    updateUIFromConfig();
+    logToConsole('➕ New proxy added');
+}
+
+function removeProxy() {
+    if (currentConfig.proxies.length <= 1) {
+        showNotification('Cannot remove the last proxy', 'warning');
+        return;
+    }
+    currentConfig.proxies.splice(selectedProxyIndex, 1);
+    selectedProxyIndex = Math.max(0, selectedProxyIndex - 1);
+    updateUIFromConfig();
+    logToConsole('🗑️ Proxy removed');
+}
+
+document.getElementById('addProxyBtn').addEventListener('click', addProxy);
+document.getElementById('removeProxyBtn').addEventListener('click', removeProxy);
