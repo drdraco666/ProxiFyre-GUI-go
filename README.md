@@ -1,88 +1,87 @@
 # ProxiFyre Configuration Editor
 
-Desktop-приложение для редактирования конфигурации ProxiFyre, построенное с использованием Wails v2 (Go + Web Frontend).
-Для работы требуется **Windows Packet Filter** [скачать](https://github.com/wiresock/ndisapi/releases/latest).
+Desktop application for editing ProxiFyre configuration, built using Wails v2 (Go + Web Frontend).
+Requires **Windows Packet Filter** [download](https://github.com/wiresock/ndisapi/releases/latest).
 
-## Требования
+## Requirements
 
-- **Go 1.23+** - [скачать](https://golang.org/dl/)
-- **Node.js 16+** - [скачать](https://nodejs.org/)
-- **Wails CLI v2** - установить командой: `go install github.com/wailsapp/wails/v2/cmd/wails@latest`
-- **Git** - для клонирования репозитория
+- **Go 1.23+** - [download](https://golang.org/dl/)
+- **Node.js 16+** - [download](https://nodejs.org/)
+- **Wails CLI v2** - install with command: `go install github.com/wailsapp/wails/v2/cmd/wails@latest`
+- **Git** - for cloning the repository
 
+## Installation
 
-## Установка
-
-1. Клонируйте репозиторий:
+1. Clone the repository:
 ```bash
 git clone <repository-url>
 cd ProxiFyre-gui-go
 ```
 
-2. Установите зависимости Go:
+2. Install Go dependencies:
 ```bash
 go mod tidy
 ```
 
-3. Установите зависимости frontend:
+3. Install frontend dependencies:
 ```bash
 cd frontend
 npm install
 cd ..
 ```
 
-## Сборка
+## Building
 
-### Автоматическая сборка (Windows)
-Запустите скрипт сборки:
+Automatic Build (Windows)
+Run the build script:
 ```bash
 build.bat
 ```
 
-### Ручная сборка
-1. Соберите frontend:
+Manual Build
+1. Build the frontend::
 ```bash
 cd frontend
 npm run build
 cd ..
 ```
 
-2. Соберите приложение:
+2. Build the application:
 ```bash
 wails build -platform windows/amd64
 ```
 
-Результат сборки: `ProxiFyreConfigEditor.exe`
+Build output:  `ProxiFyreConfigEditor.exe`
 
-## Разработка
+## Development
+### Run in development mode
 
-### Запуск в режиме разработки
 ```bash
 wails dev
 ```
 
-### Только frontend разработка
+### Frontend-only development
 ```bash
 cd frontend
 npm run dev
 ```
 
-## Структура проекта
+## Project Structure
 
-- `main.go` - точка входа Go приложения
-- `app.go` - основная логика приложения
-- `frontend/` - веб-интерфейс (Vite + Vanilla JS)
-- `wails.json` - конфигурация Wails
+- `main.go` - Go application entry point
+- `app.go` - main application logic
+- `frontend/` - web interface (Vite + Vanilla JS)
+- `wails.json` - Wails configuration
 
-## Платформы
+## Platforms
 
-- **Windows** (amd64) - основная поддержка
-- Другие платформы: измените параметр `-platform` в команде сборки
+- **Windows** (amd64) - primary support
+- Other platforms: change the `-platform` parameter in the build command
 
 ## TODO
 
-Добавить поддержку одновременно нескольких прокси
+Add support for multiple proxies simultaneously
 
-## Лицензия
+## License
 
-Проект разработан Taz (taz@turn-guild.ru) с помощю ИИ
+Project developed by Taz (taz@turn-guild.ru) with AI assistance
