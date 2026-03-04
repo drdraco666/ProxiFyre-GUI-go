@@ -1,23 +1,23 @@
 @echo off
 echo Building ProxiFyre Configuration Editor...
 
-REM Установка зависимостей
+REM Install dependencies
 echo Installing Go dependencies...
 go mod tidy
 
-REM Установка frontend зависимостей
+REM Install frontend dependencies
 echo Installing frontend dependencies...
 cd frontend
 call npm install
 cd ..
 
-REM Сборка frontend
+REM Build frontend
 echo Building frontend...
 cd frontend
 call npm run build
 cd ..
 
-REM Сборка приложения
+REM Build application
 echo Building application...
 wails build -platform windows/amd64
 
