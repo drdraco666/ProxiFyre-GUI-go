@@ -18,10 +18,10 @@ func main() {
 	// Create application with options
 	err := wails.Run(&options.App{
 		Title:     "ProxiFyre Configuration Editor",
-		Width:     1400,
-		Height:    900,
-		MinWidth:  1200,
-		MinHeight: 800,
+		Width:     1200,
+		Height:    700,
+		MinWidth:  900,
+		MinHeight: 600,
 		AssetServer: &assetserver.Options{
 			Assets: assets,
 		},
