@@ -17,13 +17,13 @@ import (
 	"time"
 )
 
-// Config структура конфигурации
+// Config structure
 type Config struct {
 	LogLevel string  `json:"logLevel"`
 	Proxies  []Proxy `json:"proxies"`
 }
 
-// Proxy структура прокси
+// Proxy structure
 type Proxy struct {
 	AppNames            []string `json:"appNames"`
 	Socks5ProxyEndpoint string   `json:"socks5ProxyEndpoint"`
@@ -61,15 +61,15 @@ func NewApp() *App {
 func (a *App) startup(ctx context.Context) {
 	a.ctx = ctx
 
-	// Проверяем, что конфигурация находится в правильной директории
+	// Ensure config is in the executable directory
 	if err := a.EnsureConfigInExecutableDir(); err != nil {
-		fmt.Printf("⚠️ Предупреждение: %v\n", err)
+		fmt.Printf("⚠️ Warning: %v\n", err)
 	}
 
 	a.loadConfig()
 }
 
-// LoadConfig загружает конфигурацию из файла
+// loadConfig loads configuration from file
 func (a *App) loadConfig() {
 	configPath := a.GetConfigPath()
 	if _, err := os.Stat(configPath); err == nil {
@@ -80,7 +80,7 @@ func (a *App) loadConfig() {
 	}
 }
 
-// SaveConfig сохраняет конфигурацию в файл
+// SaveConfig saves configuration to file
 func (a *App) SaveConfig(configData string) error {
 	var config Config
 	if err := json.Unmarshal([]byte(configData), &config); err != nil {
@@ -98,19 +98,19 @@ func (a *App) SaveConfig(configData string) error {
 	return ioutil.WriteFile(configPath, data, 0644)
 }
 
-// GetConfig возвращает текущую конфигурацию
+// GetConfig returns current configuration
 func (a *App) GetConfig() string {
 	data, _ := json.Marshal(a.config)
 	return string(data)
 }
 
-// GetCurrentDirectory возвращает текущую директорию
+// GetCurrentDirectory returns current working directory
 func (a *App) GetCurrentDirectory() string {
 	dir, _ := os.Getwd()
 	return dir
 }
 
-// GetExecutableDirectory возвращает директорию, где находится исполняемый файл
+// GetExecutableDirectory returns the directory where the executable resides
 func (a *App) GetExecutableDirectory() string {
 	executable, err := os.Executable()
 	if err != nil {
@@ -119,89 +119,89 @@ func (a *App) GetExecutableDirectory() string {
 	return filepath.Dir(executable)
 }
 
-// EnsureConfigInExecutableDir проверяет, что конфигурация находится в той же директории, что и исполняемый файл
+// EnsureConfigInExecutableDir checks that config is in the same directory as the executable
 func (a *App) EnsureConfigInExecutableDir() error {
 	execDir := a.GetExecutableDirectory()
 	currentDir := a.GetCurrentDirectory()
 
-	// Если мы не в директории исполняемого файла, копируем конфигурацию туда
+	// If not in executable directory, copy config there
 	if execDir != currentDir {
 		sourceConfig := filepath.Join(currentDir, "app-config.json")
 		targetConfig := filepath.Join(execDir, "app-config.json")
 
-		// Проверяем, есть ли конфигурация в текущей директории
+		// Check if config exists in current directory
 		if _, err := os.Stat(sourceConfig); err == nil {
-			// Копируем конфигурацию в директорию исполняемого файла
+			// Copy config to executable directory
 			data, err := ioutil.ReadFile(sourceConfig)
 			if err != nil {
-				return fmt.Errorf("не удалось прочитать конфигурацию: %v", err)
+				return fmt.Errorf("could not read config: %v", err)
 			}
 
 			err = ioutil.WriteFile(targetConfig, data, 0644)
 			if err != nil {
-				return fmt.Errorf("не удалось скопировать конфигурацию: %v", err)
+				return fmt.Errorf("could not copy config: %v", err)
 			}
 
-			fmt.Printf("✅ Конфигурация скопирована в директорию исполняемого файла: %s\n", execDir)
+			fmt.Printf("✅ Config copied to executable directory: %s\n", execDir)
 		}
 
-		// Проверяем наличие ProxiFyre.exe в директории исполняемого файла
+		// Check for ProxiFyre.exe in executable directory
 		proxifyrePath := filepath.Join(execDir, "ProxiFyre.exe")
 		if _, err := os.Stat(proxifyrePath); err == nil {
-			fmt.Printf("✅ ProxiFyre.exe найден в директории исполняемого файла: %s\n", execDir)
+			fmt.Printf("✅ ProxiFyre.exe found in executable directory: %s\n", execDir)
 		} else {
-			fmt.Printf("⚠️ ProxiFyre.exe не найден в директории исполняемого файла: %s\n", execDir)
+			fmt.Printf("⚠️ ProxiFyre.exe not found in executable directory: %s\n", execDir)
 		}
 	}
 
 	return nil
 }
 
-// GetConfigPath возвращает полный путь к файлу конфигурации
+// GetConfigPath returns full path to config file
 func (a *App) GetConfigPath() string {
 	execDir := a.GetExecutableDirectory()
 	return filepath.Join(execDir, "app-config.json")
 }
 
-// CheckProxiFyreExists проверяет наличие ProxiFyre.exe
+// CheckProxiFyreExists checks for ProxiFyre.exe
 func (a *App) CheckProxiFyreExists() bool {
 	_, err := os.Stat("ProxiFyre.exe")
 	return err == nil
 }
 
-// RunProxiFyre запускает ProxiFyre.exe
+// RunProxiFyre launches ProxiFyre.exe
 func (a *App) RunProxiFyre() error {
-	fmt.Printf("🔄 Вызвана функция RunProxiFyre\n")
+	fmt.Printf("🔄 RunProxiFyre called\n")
 
 	currentDir := a.GetCurrentDirectory()
-	fmt.Printf("📁 Текущая директория: %s\n", currentDir)
+	fmt.Printf("📁 Current directory: %s\n", currentDir)
 
 	execDir := a.GetExecutableDirectory()
-	fmt.Printf("📁 Директория исполняемого файла: %s\n", execDir)
+	fmt.Printf("📁 Executable directory: %s\n", execDir)
 
-	// Проверяем ProxiFyre.exe в текущей директории
+	// Check ProxiFyre.exe in current directory
 	proxiFyrePathCurrent := filepath.Join(currentDir, "ProxiFyre.exe")
-	fmt.Printf("🔍 Проверяю ProxiFyre.exe в текущей директории: %s\n", proxiFyrePathCurrent)
+	fmt.Printf("🔍 Checking ProxiFyre.exe in current directory: %s\n", proxiFyrePathCurrent)
 
-	// Проверяем ProxiFyre.exe в директории исполняемого файла
+	// Check ProxiFyre.exe in executable directory
 	proxiFyrePathExec := filepath.Join(execDir, "ProxiFyre.exe")
-	fmt.Printf("🔍 Проверяю ProxiFyre.exe в директории исполняемого файла: %s\n", proxiFyrePathExec)
+	fmt.Printf("🔍 Checking ProxiFyre.exe in executable directory: %s\n", proxiFyrePathExec)
 
 	var proxiFyrePath string
 
 	if _, err := os.Stat(proxiFyrePathCurrent); err == nil {
 		proxiFyrePath = proxiFyrePathCurrent
-		fmt.Printf("✅ ProxiFyre.exe найден в текущей директории\n")
+		fmt.Printf("✅ ProxiFyre.exe found in current directory\n")
 	} else if _, err := os.Stat(proxiFyrePathExec); err == nil {
 		proxiFyrePath = proxiFyrePathExec
-		fmt.Printf("✅ ProxiFyre.exe найден в директории исполняемого файла\n")
+		fmt.Printf("✅ ProxiFyre.exe found in executable directory\n")
 	} else {
-		errorMsg := fmt.Sprintf("ProxiFyre.exe не найден ни в текущей директории (%s), ни в директории исполняемого файла (%s)", currentDir, execDir)
+		errorMsg := fmt.Sprintf("ProxiFyre.exe not found in current directory (%s) nor in executable directory (%s)", currentDir, execDir)
 		fmt.Printf("❌ %s\n", errorMsg)
 		return fmt.Errorf(errorMsg)
 	}
 
-	fmt.Printf("🚀 Запускаю ProxiFyre: %s\n", proxiFyrePath)
+	fmt.Printf("🚀 Launching ProxiFyre: %s\n", proxiFyrePath)
 	cmd := exec.Command(proxiFyrePath)
 	cmd.Dir = filepath.Dir(proxiFyrePath)
 
@@ -213,100 +213,100 @@ func (a *App) RunProxiFyre() error {
 
 	err := cmd.Start()
 	if err != nil {
-		errorMsg := fmt.Sprintf("Ошибка запуска ProxiFyre: %v", err)
+		errorMsg := fmt.Sprintf("Error starting ProxiFyre: %v", err)
 		fmt.Printf("❌ %s\n", errorMsg)
 		return fmt.Errorf(errorMsg)
 	}
 
-	fmt.Printf("✅ ProxiFyre успешно запущен (PID: %d)\n", cmd.Process.Pid)
+	fmt.Printf("✅ ProxiFyre started successfully (PID: %d)\n", cmd.Process.Pid)
 	return nil
 }
 
-// StopProxiFyre останавливает ProxiFyre.exe
+// StopProxiFyre stops ProxiFyre.exe
 func (a *App) StopProxiFyre() error {
-	fmt.Printf("🔄 Вызвана функция StopProxiFyre\n")
+	fmt.Printf("🔄 StopProxiFyre called\n")
 
 	if runtime.GOOS == "windows" {
-		fmt.Printf("🛑 Останавливаю ProxiFyre.exe через taskkill\n")
+		fmt.Printf("🛑 Stopping ProxiFyre.exe via taskkill\n")
 		cmd := exec.Command("taskkill", "/F", "/IM", "ProxiFyre.exe")
 		cmd.Dir = a.GetCurrentDirectory()
 
 		err := cmd.Run()
 		if err != nil {
-			errorMsg := fmt.Sprintf("Ошибка остановки ProxiFyre: %v", err)
+			errorMsg := fmt.Sprintf("Error stopping ProxiFyre: %v", err)
 			fmt.Printf("❌ %s\n", errorMsg)
 			return fmt.Errorf(errorMsg)
 		}
 
-		fmt.Printf("✅ ProxiFyre успешно остановлен\n")
+		fmt.Printf("✅ ProxiFyre stopped successfully\n")
 		return nil
 	}
 
-	errorMsg := "Остановка поддерживается только в Windows"
+	errorMsg := "Stop operation is supported only on Windows"
 	fmt.Printf("❌ %s\n", errorMsg)
 	return fmt.Errorf(errorMsg)
 }
 
-// DownloadProxiFyre скачивает ProxiFyre
+// DownloadProxiFyre downloads ProxiFyre
 func (a *App) DownloadProxiFyre() error {
-	fmt.Printf("🔄 Вызвана функция DownloadProxiFyre\n")
+	fmt.Printf("🔄 DownloadProxiFyre called\n")
 
-	// GitHub API для получения информации о последнем релизе
+	// GitHub API to get latest release info
 	apiURL := "https://api.github.com/repos/wiresock/proxifyre/releases/latest"
-	fmt.Printf("📡 Запрос к GitHub API: %s\n", apiURL)
+	fmt.Printf("📡 Request to GitHub API: %s\n", apiURL)
 
-	// Создаем HTTP клиент с User-Agent
+	// Create HTTP client with User-Agent
 	client := &http.Client{
 		Timeout: 30 * time.Second,
 	}
 
 	req, err := http.NewRequest("GET", apiURL, nil)
 	if err != nil {
-		errorMsg := fmt.Sprintf("Ошибка создания HTTP запроса: %v", err)
+		errorMsg := fmt.Sprintf("Error creating HTTP request: %v", err)
 		fmt.Printf("❌ %s\n", errorMsg)
 		return fmt.Errorf(errorMsg)
 	}
 
-	// Устанавливаем заголовки как в Python версии
+	// Set headers as in Python version
 	req.Header.Set("User-Agent", "Mozilla/5.0")
 	req.Header.Set("Accept", "application/vnd.github.v3+json")
 
-	// Выполняем запрос
+	// Execute request
 	resp, err := client.Do(req)
 	if err != nil {
-		errorMsg := fmt.Sprintf("Ошибка HTTP запроса: %v", err)
+		errorMsg := fmt.Sprintf("Error making HTTP request: %v", err)
 		fmt.Printf("❌ %s\n", errorMsg)
 		return fmt.Errorf(errorMsg)
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		errorMsg := fmt.Sprintf("GitHub API вернул статус: %d", resp.StatusCode)
+		errorMsg := fmt.Sprintf("GitHub API returned status: %d", resp.StatusCode)
 		fmt.Printf("❌ %s\n", errorMsg)
 		return fmt.Errorf(errorMsg)
 	}
 
-	// Читаем ответ
+	// Read response
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
-		errorMsg := fmt.Sprintf("Ошибка чтения ответа: %v", err)
+		errorMsg := fmt.Sprintf("Error reading response: %v", err)
 		fmt.Printf("❌ %s\n", errorMsg)
 		return fmt.Errorf(errorMsg)
 	}
 
-	// Парсим JSON ответ
+	// Parse JSON response
 	var releaseData map[string]interface{}
 	if err := json.Unmarshal(body, &releaseData); err != nil {
-		errorMsg := fmt.Sprintf("Ошибка парсинга JSON: %v", err)
+		errorMsg := fmt.Sprintf("Error parsing JSON: %v", err)
 		fmt.Printf("❌ %s\n", errorMsg)
 		return fmt.Errorf(errorMsg)
 	}
 
-	// Получаем информацию о релизе
+	// Get release info
 	tagName, _ := releaseData["tag_name"].(string)
-	fmt.Printf("📦 Найден релиз: %s\n", tagName)
+	fmt.Printf("📦 Found release: %s\n", tagName)
 
-	// Ищем ссылку на архив (как в Python версии)
+	// Look for archive link (as in Python version)
 	var zipURL string
 	if assets, ok := releaseData["assets"].([]interface{}); ok {
 		for _, asset := range assets {
@@ -322,30 +322,30 @@ func (a *App) DownloadProxiFyre() error {
 	}
 
 	if zipURL == "" {
-		errorMsg := "Не удалось найти архив в релизе"
+		errorMsg := "Could not find archive in release"
 		fmt.Printf("❌ %s\n", errorMsg)
 		return fmt.Errorf(errorMsg)
 	}
 
-	fmt.Printf("🔗 Скачиваю: %s\n", zipURL)
+	fmt.Printf("🔗 Downloading: %s\n", zipURL)
 
-	// Создаем временную папку для загрузки
+	// Create temporary folder for download
 	tempDir, err := os.MkdirTemp("", "proxifyre-download")
 	if err != nil {
-		errorMsg := fmt.Sprintf("Ошибка создания временной папки: %v", err)
+		errorMsg := fmt.Sprintf("Error creating temp folder: %v", err)
 		fmt.Printf("❌ %s\n", errorMsg)
 		return fmt.Errorf(errorMsg)
 	}
-	defer os.RemoveAll(tempDir) // Удаляем временную папку при выходе
+	defer os.RemoveAll(tempDir) // Clean up temp folder on exit
 
 	zipPath := filepath.Join(tempDir, "proxifyre.zip")
-	fmt.Printf("📁 Временная папка: %s\n", tempDir)
+	fmt.Printf("📁 Temp folder: %s\n", tempDir)
 
-	// Скачиваем архив
-	fmt.Printf("📥 Скачиваю архив...\n")
+	// Download archive
+	fmt.Printf("📥 Downloading archive...\n")
 	zipResp, err := http.Get(zipURL)
 	if err != nil {
-		errorMsg := fmt.Sprintf("Ошибка скачивания архива: %v", err)
+		errorMsg := fmt.Sprintf("Error downloading archive: %v", err)
 		fmt.Printf("❌ %s\n", errorMsg)
 		return fmt.Errorf(errorMsg)
 	}
@@ -353,7 +353,7 @@ func (a *App) DownloadProxiFyre() error {
 
 	zipFile, err := os.Create(zipPath)
 	if err != nil {
-		errorMsg := fmt.Sprintf("Ошибка создания файла архива: %v", err)
+		errorMsg := fmt.Sprintf("Error creating archive file: %v", err)
 		fmt.Printf("❌ %s\n", errorMsg)
 		return fmt.Errorf(errorMsg)
 	}
@@ -361,93 +361,93 @@ func (a *App) DownloadProxiFyre() error {
 
 	_, err = io.Copy(zipFile, zipResp.Body)
 	if err != nil {
-		errorMsg := fmt.Sprintf("Ошибка сохранения архива: %v", err)
+		errorMsg := fmt.Sprintf("Error saving archive: %v", err)
 		fmt.Printf("❌ %s\n", errorMsg)
 		return fmt.Errorf(errorMsg)
 	}
 
-	fmt.Printf("📦 Архив скачан, распаковываю...\n")
+	fmt.Printf("📦 Archive downloaded, extracting...\n")
 
-	// Разархивируем
+	// Extract archive
 	execDir := a.GetExecutableDirectory()
-	fmt.Printf("📁 Распаковываю в: %s\n", execDir)
+	fmt.Printf("📁 Extracting to: %s\n", execDir)
 
 	archive, err := zip.OpenReader(zipPath)
 	if err != nil {
-		errorMsg := fmt.Sprintf("Ошибка открытия архива: %v", err)
+		errorMsg := fmt.Sprintf("Error opening archive: %v", err)
 		fmt.Printf("❌ %s\n", errorMsg)
 		return fmt.Errorf(errorMsg)
 	}
 	defer archive.Close()
 
-	// Считаем извлеченные файлы
+	// Count extracted files
 	extractedFiles := 0
 	for _, file := range archive.File {
 		if file.FileInfo().IsDir() {
 			continue
 		}
 
-		// Проверяем расширение файла (как в Python версии)
+		// Check file extension (as in Python version)
 		fileName := file.Name
 		if strings.HasSuffix(strings.ToLower(fileName), ".exe") ||
 			strings.HasSuffix(strings.ToLower(fileName), ".dll") ||
 			strings.HasSuffix(strings.ToLower(fileName), ".txt") ||
 			strings.HasSuffix(strings.ToLower(fileName), ".md") {
 
-			// Создаем путь для извлечения
+			// Create extraction path
 			extractPath := filepath.Join(execDir, fileName)
 
-			// Создаем директории если нужно
+			// Create directories if needed
 			if err := os.MkdirAll(filepath.Dir(extractPath), 0755); err != nil {
-				fmt.Printf("⚠️ Не удалось создать директорию для %s: %v\n", fileName, err)
+				fmt.Printf("⚠️ Could not create directory for %s: %v\n", fileName, err)
 				continue
 			}
 
-			// Создаем файл
+			// Create file
 			dstFile, err := os.Create(extractPath)
 			if err != nil {
-				fmt.Printf("⚠️ Не удалось создать файл %s: %v\n", fileName, err)
+				fmt.Printf("⚠️ Could not create file %s: %v\n", fileName, err)
 				continue
 			}
 
-			// Открываем файл из архива
+			// Open file in archive
 			srcFile, err := file.Open()
 			if err != nil {
 				dstFile.Close()
-				fmt.Printf("⚠️ Не удалось открыть файл из архива %s: %v\n", fileName, err)
+				fmt.Printf("⚠️ Could not open file in archive %s: %v\n", fileName, err)
 				continue
 			}
 
-			// Копируем содержимое
+			// Copy content
 			_, err = io.Copy(dstFile, srcFile)
 			srcFile.Close()
 			dstFile.Close()
 
 			if err != nil {
-				fmt.Printf("⚠️ Не удалось скопировать файл %s: %v\n", fileName, err)
+				fmt.Printf("⚠️ Could not copy file %s: %v\n", fileName, err)
 				continue
 			}
 
 			extractedFiles++
-			fmt.Printf("✅ Извлечен файл: %s\n", fileName)
+			fmt.Printf("✅ Extracted file: %s\n", fileName)
 		}
 	}
 
 	if extractedFiles > 0 {
-		successMsg := fmt.Sprintf("Архив успешно распакован! Извлечено файлов: %d", extractedFiles)
+		successMsg := fmt.Sprintf("Archive extracted successfully! Files extracted: %d", extractedFiles)
 		fmt.Printf("✅ %s\n", successMsg)
 		return nil
 	} else {
-		errorMsg := "Не удалось распаковать архив"
+		errorMsg := "Failed to extract archive"
 		fmt.Printf("❌ %s\n", errorMsg)
 		return fmt.Errorf(errorMsg)
 	}
 }
 
-// InstallService устанавливает ProxiFyre как сервис
+// InstallService installs ProxiFyre as a service
 func (a *App) InstallService() error {
 	if !a.CheckProxiFyreExists() {
-		return fmt.Errorf("ProxiFyre.exe не найден в текущей директории")
+		return fmt.Errorf("ProxiFyre.exe not found in current directory")
 	}
 
 	cmd := exec.Command("ProxiFyre.exe", "install")
@@ -455,10 +455,10 @@ func (a *App) InstallService() error {
 	return cmd.Run()
 }
 
-// UninstallService удаляет сервис ProxiFyre
+// UninstallService uninstalls ProxiFyre service
 func (a *App) UninstallService() error {
 	if !a.CheckProxiFyreExists() {
-		return fmt.Errorf("ProxiFyre.exe не найден в текущей директории")
+		return fmt.Errorf("ProxiFyre.exe not found in current directory")
 	}
 
 	cmd := exec.Command("ProxiFyre.exe", "uninstall")
@@ -466,10 +466,10 @@ func (a *App) UninstallService() error {
 	return cmd.Run()
 }
 
-// StartService запускает сервис ProxiFyre
+// StartService starts ProxiFyre service
 func (a *App) StartService() error {
 	if !a.CheckProxiFyreExists() {
-		return fmt.Errorf("ProxiFyre.exe не найден в текущей директории")
+		return fmt.Errorf("ProxiFyre.exe not found in current directory")
 	}
 
 	cmd := exec.Command("ProxiFyre.exe", "start")
@@ -477,10 +477,10 @@ func (a *App) StartService() error {
 	return cmd.Run()
 }
 
-// StopService останавливает сервис ProxiFyre
+// StopService stops ProxiFyre service
 func (a *App) StopService() error {
 	if !a.CheckProxiFyreExists() {
-		return fmt.Errorf("ProxiFyre.exe не найден в текущей директории")
+		return fmt.Errorf("ProxiFyre.exe not found in current directory")
 	}
 
 	cmd := exec.Command("ProxiFyre.exe", "stop")
@@ -488,29 +488,29 @@ func (a *App) StopService() error {
 	return cmd.Run()
 }
 
-// GetServiceStatus возвращает статус сервиса
+// GetServiceStatus returns service status
 func (a *App) GetServiceStatus() string {
 	if runtime.GOOS != "windows" {
-		return "Не поддерживается в данной ОС"
+		return "Not supported on this OS"
 	}
 
 	cmd := exec.Command("sc", "query", "ProxiFyre")
 	output, err := cmd.Output()
 	if err != nil {
-		return "Сервис не найден"
+		return "Service not found"
 	}
 
 	outputStr := string(output)
 	if strings.Contains(outputStr, "RUNNING") {
-		return "Запущен"
+		return "Running"
 	} else if strings.Contains(outputStr, "STOPPED") {
-		return "Остановлен"
+		return "Stopped"
 	}
 
-	return "Неизвестно"
+	return "Unknown"
 }
 
-// GetTimestamp возвращает текущее время в формате HH:MM:SS
+// GetTimestamp returns current time in HH:MM:SS format
 func (a *App) GetTimestamp() string {
 	return time.Now().Format("15:04:05")
 }
